@@ -542,7 +542,6 @@ Return ONLY a JSON like:
     const results = await user.aggregate(pipeline);
 
     res.json({
-      success: true,
       interpretedName: name,
       count: results.length,
       results,
