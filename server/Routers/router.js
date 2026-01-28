@@ -369,6 +369,29 @@ router.get("/cartValue", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+//Remove from Cart
+router.post('/:id/removeFromCart', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const productId = req.params.id;
+
+    const User = await user.findByIdAndUpdate(
+      userId,
+      { $pull: { cart: productId } },
+      { new: true }
+    ).populate('cart');
+
+    res.status(200).json({  
+      message: 'Product removed from cart',
+      cart: User.cart
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: 'Error removing from cart',
+      error: error.message
+    });
+  }
+});
 
 
 //Seller reviews and ratings

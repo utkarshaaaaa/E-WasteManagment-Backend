@@ -1,62 +1,84 @@
 const mongoose = require("mongoose");
-const { type } = require("os");
+const bcrypt = require("bcryptjs");
 
-const userschema = new mongoose.Schema({
-  userName: {
-    type: String,
-    require: true,
-  },
-  profileImageUrl: {
-    type: String,
-    require: true,
-  },
+const userschema = new mongoose.Schema(
+  {
+    userName: {
+      type: String,
+      required: true,
+    },
+    profileImageUrl: {
+      type: String,
+      required: true,
+    },
+    Id: {
+      type: String,
+      required: true,
+    },
+    userEmail: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    deviceAnalysisData: {
+      type: Array,
+      default: [],
+    },
+    productsListed: {
+      type: Array,
+      default: [],
+    },
+    productBought: {
+      type: Array,
+      default: [],
+    },
+    productSold: {
+      type: Array,
+      default: [],
+    },
+    cart: {
+      type: Array,
+      default: [],
+    },
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    reviews: {
+      type: Array,
+      default: [],
+    },
 
-  Id: {
-    type: String,
-    require: true,
-  },
-  userEmail: {
-    type: String,
-    require: true,
-  },
+    chatGroups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ChatGroup",
+      },
+    ],
 
-  password: {
-    type: String,
-    require: true,
-  },
-  deviceAnalysisData: {
-    type: Array,
-    default:[]
-  },
+    totalUnreadMessages: {
+      type: Number,
+      default: 0,
+    },
 
-  productsListed:{
-    type: Array,
-    default:[]
-  },
-  productBought:{
-    type: Array,
-    default:[]
-  },
-  productSold:{
-    type: Array,
-    default:[]
-  },
-  cart:{
-    type: Array,
-    default:[]
-  },
-  rating:{
-    type: Number,
-    default:0
-  },
-  reviews:{
-    type: Array,
-    default:[]
-    
-  }
+    lastActive: {
+      type: Date,
+      default: Date.now,
+    },
 
-  
-});
+    role: {
+      type: String,
+      enum: ["buyer", "seller", "both"],
+      default: "both",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 const user = mongoose.model("eWasteManagmentData", userschema);
 
