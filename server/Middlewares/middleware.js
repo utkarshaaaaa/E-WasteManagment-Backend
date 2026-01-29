@@ -7,12 +7,20 @@ const PUBLIC_KEY = process.env.PASETO_PUBLIC_KEY.replace(/\\n/g, "\n");
 
 async function authMiddleware(req, res, next) {
   try {
-    const authToken = req.headers.authorization;
-    // const authToken = req.cookies.access_token; //When using cookies
-    if (!authToken)
-      return res.status(401).json({ message: "No token provided" });
+   
+    let token = req.cookies?.access_token;
+    
+    if (!token) {
+      const authToken = req.headers.authorization;
+      if (!authToken) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+      token = authToken.split(" ")[1];
+    }
 
-    const token = authToken.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
 
     const payload = await V2.verify(token, PUBLIC_KEY);
 
@@ -28,24 +36,3 @@ module.exports = authMiddleware;
 
 
 
-// export const pasetoAuth = async (req, res, next) => {
-//   try {
-  
-//     const token = req.cookies?.access_token;
-
-//     if (!token) {
-//       return res.status(401).json({ error: "No token provided" });
-//     }
-
-//     const payload = await V2.verify(token, PUBLIC_KEY);
-
-//     req.user = {
-//       id: payload.id,
-//       name: payload.name,
-//     };
-
-//     next();
-//   } catch (err) {
-//     return res.status(401).json({ error: "Invalid or expired token" });
-//   }
-// };

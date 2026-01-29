@@ -29,6 +29,7 @@ const router = express.Router();
 const authMiddleware = require("../Middlewares/middleware");
 const bcrypt = require("bcrypt");
 const { V2 } = require("paseto");
+const ChatGroup = require("../Schema/ChatGroup");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
@@ -324,6 +325,53 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
 // price: Number,
 // imageUrl: Array,
 // }
+
+//List Product with Chat Group Creation
+router.post("/listProductWithChat", authMiddleware, async (req, res) => {
+  const { name, quantity, description, price, imageUrl } = req.body;
+  const userId = req.user.id; 
+
+  try {
+    const newProduct = {
+      productId: uuidv4(),
+      name,
+      quantity,
+      description,
+      price,
+      imageUrl,
+      rating: 0,
+    };
+
+    const updatedUser = await user.findOneAndUpdate(
+      { Id: userId },
+      { $push: { productsListed: newProduct } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }   
+    const chatGroup = await ChatGroup.create({
+      productId: newProduct.productId,
+      productName: newProduct.name,
+      sellerId: updatedUser._id,
+      participants: [],
+    });
+
+    updatedUser.chatGroups.push(chatGroup._id);
+    await updatedUser.save();
+
+    res.status(200).json({
+      product: newProduct,
+      chatGroupId: chatGroup._id,
+      message: "Product listed & chat group created",
+    });
+  } catch (error) {
+    console.error("Error listing product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 //Get Cart Items
 router.get("/getCartItems", authMiddleware, async (req, res) => {
   try {

@@ -9,11 +9,11 @@ const userschema = new mongoose.Schema(
     },
     profileImageUrl: {
       type: String,
-      required: true,
+      // required: true,
     },
     Id: {
       type: String,
-      required: true,
+      // required: true,
     },
     userEmail: {
       type: String,
@@ -68,16 +68,8 @@ const userschema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-
-    role: {
-      type: String,
-      enum: ["buyer", "seller", "both"],
-      default: "both",
-    },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true }
 );
 
 const user = mongoose.model("eWasteManagmentData", userschema);

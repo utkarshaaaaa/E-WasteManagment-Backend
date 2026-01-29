@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcrypt");
 const authMiddleware = require("../Middlewares/middleware");
 
-dotenv.config(); 
+dotenv.config();
 
 const PRIVATE_KEY = process.env.PASETO_PRIVATE_KEY.replace(/\\n/g, "\n");
 
@@ -18,7 +18,7 @@ router.get("/test", (req, res) => {
 //User Register
 router.post("/register", async (req, res) => {
   try {
-    const { userName,  userEmail, password } = req.body;
+    const { userName, userEmail, password } = req.body;
 
     const exist = await user.findOne({ userEmail });
     if (exist)
@@ -40,12 +40,10 @@ router.post("/login", async (req, res) => {
     const { userEmail, password } = req.body;
 
     const User = await user.findOne({ userEmail });
-    if (!User)
-      return res.status(400).json({ message: "User not found" });
+    if (!User) return res.status(400).json({ message: "User not found" });
 
     const match = await bcrypt.compare(password, User.password);
-    if (!match)
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = await V2.sign(
       {
@@ -54,23 +52,32 @@ router.post("/login", async (req, res) => {
         userName: User.userName,
       },
       PRIVATE_KEY,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     res.cookie("access_token", token, {
       httpOnly: true,
-      secure: false,    
+      secure: false,
       sameSite: "lax",
-      maxAge: 60 * 60 * 1000, 
+      maxAge: 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: "Login successful" });
+    res.status(200).json({ message: "Login successful", token: token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error" });
   }
 });
+//Logout Route
+router.post("/logout", (req, res) => {
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+  });
 
+  res.json({ message: "Logged out" });
+});
 
 router.get("/user", authMiddleware, (req, res) => {
   res.json({
