@@ -245,19 +245,54 @@ router.get("/products", authMiddleware, async (req, res) => {
 });
 
 //Get product by ID
+
 router.get("/products/:id", authMiddleware, async (req, res) => {
   try {
     const productId = req.params.id;
-    const product = await user.findOne({ Id: productId });
+  
+    const foundUser = await user.findOne({ 
+      "productsListed.productId": productId 
+    });
+    
+    if (!foundUser) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    
+    const product = foundUser.productsListed.find(
+      p => p.productId === productId
+    );
+    
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.status(200).json({ product: product });
+    
+    // Add seller information
+    const productWithSeller = {
+      ...product,
+      sellerId: foundUser._id,
+      sellerName: foundUser.userName
+    };
+    
+    res.status(200).json({ product: productWithSeller });
   } catch (error) {
     console.error("Error fetching product:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+// router.get("/products/:id", authMiddleware, async (req, res) => {
+//   try {
+//     const productId = req.params.id;
+//     const product = await user.findOne({ Id: productId });
+//     if (!product) {
+//       return res.status(404).json({ error: "Product not found" });
+//     }
+//     res.status(200).json({ product: product });
+//   } catch (error) {
+//     console.error("Error fetching product:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+
 // Add to Cart
 router.post("/cart/add:productId", authMiddleware, async (req, res) => {
   try {
@@ -284,10 +319,10 @@ router.post("/cart/add:productId", authMiddleware, async (req, res) => {
   }
 });
 
-//List a Product
 router.post("/listProduct", authMiddleware, async (req, res) => {
   const { name, quantity, description, price, imageUrl } = req.body;
   const userId = req.user.id;
+
   try {
     const newProduct = {
       productId: uuidv4(),
@@ -299,23 +334,58 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
       rating: 0,
     };
 
-    const updatedUser = await user.findByIdAndUpdate(
-      { Id: userId },
+    const updatedUser = await user.findOneAndUpdate(
+      { _id: userId },
       { $push: { productsListed: newProduct } },
-      { new: true },
+      { new: true }
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
+
     res.status(200).json({
       product: newProduct,
+      message: "Product listed successfully",
     });
   } catch (error) {
-    console.error("Error", error);
+    console.error("Error listing product:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+// router.post("/listProduct", authMiddleware, async (req, res) => {
+//   const { name, quantity, description, price, imageUrl } = req.body;
+//   const userId = req.user.id;
+//   try {
+//     const newProduct = {
+//       productId: uuidv4(),
+//       name,
+//       quantity,
+//       description,
+//       price,
+//       imageUrl,
+//       rating: 0,
+//     };
+
+//     const updatedUser = await user.findByIdAndUpdate(
+//       { Id: userId },
+//       { $push: { productsListed: newProduct } },
+//       { new: true },
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     res.status(200).json({
+//       product: newProduct,
+//     });
+//   } catch (error) {
+//     console.error("Error", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
 
 // listedProducts:{
 // productId: String,
@@ -343,7 +413,7 @@ router.post("/listProductWithChat", authMiddleware, async (req, res) => {
     };
 
     const updatedUser = await user.findOneAndUpdate(
-      { Id: userId },
+      { _id: userId },
       { $push: { productsListed: newProduct } },
       { new: true }
     );
@@ -498,16 +568,16 @@ router.get("/sellerReviews/:sellerId", authMiddleware, async (req, res) => {
 router.get("/userProfile/:userId", authMiddleware, async (req, res) => {
   const userId = req.params.userId;
   try {
-    const User = await user.findOne({ Id: userId });
+    const User = await user.findOne({ _id: userId });
     if (!User) {
       return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json({
       userName: User.userName,
       productSold: User.productSold.length || 0,
-      rating: User.rating,
-      reviews: User.reviews,
-      profileImageUrl: User.profileImageUrl,
+      rating: User.rating || 0,
+      reviews: User.reviews || [],
+      profileImageUrl: User.profileImageUrl || null,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
