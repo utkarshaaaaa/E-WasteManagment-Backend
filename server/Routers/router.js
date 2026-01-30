@@ -73,7 +73,7 @@ async function generateComponentImage(partName, deviceName) {
   try {
     const prompt = `High quality studio photo of ${partName} from ${deviceName}, isolated on a white background, well lit, product photography style`;
 
-    // Using Stable Diffusion XL model
+    //Stable Diffusion XL model
     const response = await fetch(
       "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
       {
@@ -101,6 +101,45 @@ async function generateComponentImage(partName, deviceName) {
     return null;
   }
 }
+//Get Component Description
+router.post("/get-component-description", authMiddleware, async (req, res) => {
+  try {
+    const { componentName, deviceName } = req.body;
+
+    if (!componentName) {
+      return res.status(400).json({ error: "Component name required" });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = `
+You are an electronics expert. Provide a brief, informative description of this component:
+
+Component: ${componentName}
+Device: ${deviceName || 'Electronic Device'}
+
+Include:
+1. What this component does (1-2 sentences)
+2. Common issues or failure reasons (1 sentence)
+3. Replacement difficulty level (Easy/Medium/Hard)
+
+Keep it concise and practical. No markdown, just plain text in 3-4 sentences total.
+`;
+
+    const result = await model.generateContent(prompt);
+    const description = result.response.text();
+
+    res.json({
+      success: true,
+      componentName,
+      description: description.trim()
+    });
+  } catch (error) {
+    console.error("Error getting component description:", error);
+    res.status(500).json({ error: "Failed to get description" });
+  }
+});
+
 
 //Analyze Device & Generate Images
 router.post("/analyze-device-image", async (req, res) => {
@@ -518,14 +557,22 @@ router.post("/submitReview", authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const seller = await user.findOne({ Id: sellerId });
+    const seller = await user.findOne({ _id: sellerId });
     if (!seller) {
       return res.status(404).json({ message: "Seller not found" });
     }
+
+    const reviewerName = await user.findOne({ _id: userId });
+    if (!reviewerName) {
+      return res.status(404).json({ message: "Reviewer not found" });
+    }
+
     const newReview = {
       reviewerId: userId,
+      reviewerName: reviewerName.userName,
       rating: rating,
       review: review,
+      createdAt: new Date()
     };
     seller.reviews.push(newReview);
     const totalRatings = seller.reviews.reduce((sum, r) => sum + r.rating, 0);
