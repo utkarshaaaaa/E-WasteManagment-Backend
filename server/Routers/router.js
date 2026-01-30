@@ -767,6 +767,7 @@ Return ONLY a JSON like:
     res.status(500).json({ error: "Search failed" });
   }
 });
+
 // router.post("/aiSearch", async (req, res) => {
 //   try {
 //     const { query } = req.body;
