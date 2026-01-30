@@ -50,6 +50,8 @@ router.post("/login", async (req, res) => {
         id: User._id.toString(),
         userEmail: User.userEmail,
         userName: User.userName,
+        productsListed: User.productsListed,
+        rating: User.rating,
       },
       PRIVATE_KEY,
       { expiresIn: "1h" },

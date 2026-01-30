@@ -116,7 +116,7 @@ router.post("/get-component-description", authMiddleware, async (req, res) => {
 You are an electronics expert. Provide a brief, informative description of this component:
 
 Component: ${componentName}
-Device: ${deviceName || 'Electronic Device'}
+Device: ${deviceName || "Electronic Device"}
 
 Include:
 1. What this component does (1-2 sentences)
@@ -132,14 +132,13 @@ Keep it concise and practical. No markdown, just plain text in 3-4 sentences tot
     res.json({
       success: true,
       componentName,
-      description: description.trim()
+      description: description.trim(),
     });
   } catch (error) {
     console.error("Error getting component description:", error);
     res.status(500).json({ error: "Failed to get description" });
   }
 });
-
 
 //Analyze Device & Generate Images
 router.post("/analyze-device-image", async (req, res) => {
@@ -288,30 +287,30 @@ router.get("/products", authMiddleware, async (req, res) => {
 router.get("/products/:id", authMiddleware, async (req, res) => {
   try {
     const productId = req.params.id;
-  
-    const foundUser = await user.findOne({ 
-      "productsListed.productId": productId 
+
+    const foundUser = await user.findOne({
+      "productsListed.productId": productId,
     });
-    
+
     if (!foundUser) {
       return res.status(404).json({ error: "Product not found" });
     }
-    
+
     const product = foundUser.productsListed.find(
-      p => p.productId === productId
+      (p) => p.productId === productId,
     );
-    
+
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-    
+
     // Add seller information
     const productWithSeller = {
       ...product,
       sellerId: foundUser._id,
-      sellerName: foundUser.userName
+      sellerName: foundUser.userName,
     };
-    
+
     res.status(200).json({ product: productWithSeller });
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -376,7 +375,7 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
     const updatedUser = await user.findOneAndUpdate(
       { _id: userId },
       { $push: { productsListed: newProduct } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -392,7 +391,6 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 // router.post("/listProduct", authMiddleware, async (req, res) => {
 //   const { name, quantity, description, price, imageUrl } = req.body;
@@ -438,7 +436,7 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
 //List Product with Chat Group Creation
 router.post("/listProductWithChat", authMiddleware, async (req, res) => {
   const { name, quantity, description, price, imageUrl } = req.body;
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   try {
     const newProduct = {
@@ -454,12 +452,12 @@ router.post("/listProductWithChat", authMiddleware, async (req, res) => {
     const updatedUser = await user.findOneAndUpdate(
       { _id: userId },
       { $push: { productsListed: newProduct } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
-    }   
+    }
     const chatGroup = await ChatGroup.create({
       productId: newProduct.productId,
       productName: newProduct.name,
@@ -527,29 +525,26 @@ router.get("/cartValue", authMiddleware, async (req, res) => {
   }
 });
 //Remove from Cart
-router.post('/:id/removeFromCart', async (req, res) => {
+router.post("/:id/removeFromCart", async (req, res) => {
   try {
     const { userId } = req.body;
     const productId = req.params.id;
 
-    const User = await user.findByIdAndUpdate(
-      userId,
-      { $pull: { cart: productId } },
-      { new: true }
-    ).populate('cart');
+    const User = await user
+      .findByIdAndUpdate(userId, { $pull: { cart: productId } }, { new: true })
+      .populate("cart");
 
-    res.status(200).json({  
-      message: 'Product removed from cart',
-      cart: User.cart
+    res.status(200).json({
+      message: "Product removed from cart",
+      cart: User.cart,
     });
   } catch (error) {
     res.status(400).json({
-      message: 'Error removing from cart',
-      error: error.message
+      message: "Error removing from cart",
+      error: error.message,
     });
   }
 });
-
 
 //Seller reviews and ratings
 router.post("/submitReview", authMiddleware, async (req, res) => {
@@ -572,7 +567,7 @@ router.post("/submitReview", authMiddleware, async (req, res) => {
       reviewerName: reviewerName.userName,
       rating: rating,
       review: review,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     seller.reviews.push(newReview);
     const totalRatings = seller.reviews.reduce((sum, r) => sum + r.rating, 0);
@@ -643,6 +638,43 @@ router.get("/userProfile/:userId", authMiddleware, async (req, res) => {
 // imageUrl: Array,
 // }
 //search?name=productname ==>URL Format
+// router.get("/search", async (req, res) => {
+//   try {
+//     const { name } = req.query;
+
+//     if (!name) {
+//       return res.status(400).json({ error: "Product name required" });
+//     }
+
+//     const pipeline = [
+//       { $unwind: "$productsListed" },
+//       {
+//         $match: {
+//           $text: { $search: name },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           sellerId: "$Id",
+//           sellerName: "$userName",
+//           product: "$productsListed",
+//         },
+//       },
+//       { $limit: 20 },
+//     ];
+
+//     const results = await user.aggregate(pipeline);
+
+//     res.status(200).json({
+//       count: results.length,
+//       results,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Search failed" });
+//   }
+// });
 router.get("/search", async (req, res) => {
   try {
     const { name } = req.query;
@@ -651,29 +683,27 @@ router.get("/search", async (req, res) => {
       return res.status(400).json({ error: "Product name required" });
     }
 
-    const pipeline = [
-      { $unwind: "$productsListed" },
-      {
-        $match: {
-          $text: { $search: name },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          sellerId: "$Id",
-          sellerName: "$userName",
-          product: "$productsListed",
-        },
-      },
-      { $limit: 20 },
-    ];
+    // Simple search across all products
+    const users = await user.find({});
+    const results = [];
 
-    const results = await user.aggregate(pipeline);
+    users.forEach((usr) => {
+      if (usr.productsListed && usr.productsListed.length > 0) {
+        usr.productsListed.forEach((product) => {
+          if (product.name.toLowerCase().includes(name.toLowerCase())) {
+            results.push({
+              sellerId: usr.Id,
+              sellerName: usr.userName,
+              product: product,
+            });
+          }
+        });
+      }
+    });
 
     res.status(200).json({
       count: results.length,
-      results,
+      results: results.slice(0, 20),
     });
   } catch (err) {
     console.error(err);
@@ -683,6 +713,7 @@ router.get("/search", async (req, res) => {
 
 //AI Search Products
 //aiSearch?query=productname =>URL Format
+
 router.post("/aiSearch", async (req, res) => {
   try {
     const { query } = req.body;
@@ -709,35 +740,88 @@ Return ONLY a JSON like:
 
     const { name } = JSON.parse(aiText);
 
-    const pipeline = [
-      { $unwind: "$productsListed" },
-      {
-        $match: {
-          $text: { $search: name },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          sellerId: "$Id",
-          sellerName: "$userName",
-          product: "$productsListed",
-        },
-      },
-      { $limit: 20 },
-    ];
+    const users = await user.find({});
+    const results = [];
 
-    const results = await user.aggregate(pipeline);
+    users.forEach((usr) => {
+      if (usr.productsListed && usr.productsListed.length > 0) {
+        usr.productsListed.forEach((product) => {
+          if (product.name.toLowerCase().includes(name.toLowerCase())) {
+            results.push({
+              sellerId: usr.Id,
+              sellerName: usr.userName,
+              product: product,
+            });
+          }
+        });
+      }
+    });
 
     res.json({
       interpretedName: name,
       count: results.length,
-      results,
+      results: results.slice(0, 20),
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Search failed" });
   }
 });
+// router.post("/aiSearch", async (req, res) => {
+//   try {
+//     const { query } = req.body;
+//     if (!query) {
+//       return res.status(400).json({ error: "Query required" });
+//     }
+
+//     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+//     const prompt = `
+// You are a product search assistant.
+
+// Extract the MOST RELEVANT product name from the user's request.
+
+// User query:
+// "${query}"
+
+// Return ONLY a JSON like:
+// { "name": "product name" }
+// `;
+
+//     const aiResponse = await model.generateContent(prompt);
+//     const aiText = aiResponse.response.text();
+
+//     const { name } = JSON.parse(aiText);
+
+//     const pipeline = [
+//       { $unwind: "$productsListed" },
+//       {
+//         $match: {
+//           $text: { $search: name },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           sellerId: "$Id",
+//           sellerName: "$userName",
+//           product: "$productsListed",
+//         },
+//       },
+//       { $limit: 20 },
+//     ];
+
+//     const results = await user.aggregate(pipeline);
+
+//     res.json({
+//       interpretedName: name,
+//       count: results.length,
+//       results,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Search failed" });
+//   }
+// });
 
 module.exports = router;
