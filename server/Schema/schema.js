@@ -11,10 +11,10 @@ const userschema = new mongoose.Schema(
       type: String,
       // required: true,
     },
-    Id: {
-      type: String,
-      // required: true,
-    },
+    // Id: {
+    //   type: String,
+    //   // required: true,
+    // },
     userEmail: {
       type: String,
       required: true,

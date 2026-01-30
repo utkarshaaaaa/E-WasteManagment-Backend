@@ -304,7 +304,6 @@ router.get("/products/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // Add seller information
     const productWithSeller = {
       ...product,
       sellerId: foundUser._id,
@@ -356,7 +355,6 @@ router.post("/cart/add:productId", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 router.post("/listProduct", authMiddleware, async (req, res) => {
   const { name, quantity, description, price, imageUrl } = req.body;
   const userId = req.user.id;
@@ -382,6 +380,29 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // ✅ AUTO-CREATE CHAT GROUP for this product
+    try {
+      const chatGroup = await ChatGroup.create({
+        productId: newProduct.productId,
+        productName: newProduct.name,
+        sellerId: userId,
+        participants: [],
+        lastMessageAt: new Date(),
+        isClosed: false
+      });
+
+      // Add chatGroup to seller's chatGroups array
+      await user.findByIdAndUpdate(
+        userId,
+        { $addToSet: { chatGroups: chatGroup._id } },
+        { new: true }
+      );
+
+      console.log("Chat group created automatically for product:", newProduct.productId);
+    } catch (chatError) {
+      console.error("Error creating chat group:", chatError);
+    }
+
     res.status(200).json({
       product: newProduct,
       message: "Product listed successfully",
@@ -391,8 +412,42 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 // router.post("/listProduct", authMiddleware, async (req, res) => {
+//   const { name, quantity, description, price, imageUrl } = req.body;
+//   const userId = req.user.id;
+
+//   try {
+//     const newProduct = {
+//       productId: uuidv4(),
+//       name,
+//       quantity,
+//       description,
+//       price,
+//       imageUrl,
+//       rating: 0,
+//     };
+
+//     const updatedUser = await user.findOneAndUpdate(
+//       { _id: userId },
+//       { $push: { productsListed: newProduct } },
+//       { new: true },
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     res.status(200).json({
+//       product: newProduct,
+//       message: "Product listed successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error listing product:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+
+
 //   const { name, quantity, description, price, imageUrl } = req.body;
 //   const userId = req.user.id;
 //   try {
