@@ -40,24 +40,4 @@ module.exports = function setupSocket(server) {
   return io;
 };
 
-// const { Server } = require("socket.io");
 
-// module.exports = function setupSocket(server) {
-//   const io = new Server(server, {
-//     cors: { origin: "*" },
-//   });
-
-//   io.on("connection", (socket) => {
-//     console.log("Socket connected:", socket.id);
-
-//     socket.on("joinChat", (chatGroupId) => {
-//       socket.join(chatGroupId);
-//     });
-
-//     socket.on("disconnect", () => {
-//       console.log("Socket disconnected");
-//     });
-//   });
-
-//   return io;
-// };
