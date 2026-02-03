@@ -26,14 +26,14 @@ module.exports = function setupSocket(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log("🔌 Socket connected:", socket.user.id);
+    console.log("Socket connected:", socket.user.id);
 
     socket.on("joinChat", (chatGroupId) => {
       socket.join(chatGroupId);
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected:", socket.user.id);
+      console.log(" Socket disconnected:", socket.user.id);
     });
   });
 
