@@ -768,7 +768,7 @@ Return ONLY a JSON like:
         usr.productsListed.forEach((product) => {
           if (product.name.toLowerCase().includes(name.toLowerCase())) {
             results.push({
-              sellerId: usr.Id,
+              sellerId: usr._id,
               sellerName: usr.userName,
               product: product,
             });
@@ -845,7 +845,7 @@ Return ONLY a JSON like:
 //   }
 // });
 
-//Edit user product listed array
+//Edit user product listed array(Change product details)
 router.put("/editProduct/:productId", authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
