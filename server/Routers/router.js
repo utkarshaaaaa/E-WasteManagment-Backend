@@ -639,6 +639,7 @@ router.get("/userProfile/:userId", authMiddleware, async (req, res) => {
       productSold: User.productSold.length || 0,
       rating: User.rating || 0,
       reviews: User.reviews || [],
+      productsListed: User.productsListed || [],
       profileImageUrl: User.profileImageUrl || null,
     });
   } catch (error) {
