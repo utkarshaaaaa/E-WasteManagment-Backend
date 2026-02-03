@@ -380,7 +380,6 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ AUTO-CREATE CHAT GROUP for this product
     try {
       const chatGroup = await ChatGroup.create({
         productId: newProduct.productId,
@@ -391,7 +390,6 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
         isClosed: false
       });
 
-      // Add chatGroup to seller's chatGroups array
       await user.findByIdAndUpdate(
         userId,
         { $addToSet: { chatGroups: chatGroup._id } },
@@ -412,40 +410,7 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-// router.post("/listProduct", authMiddleware, async (req, res) => {
-//   const { name, quantity, description, price, imageUrl } = req.body;
-//   const userId = req.user.id;
 
-//   try {
-//     const newProduct = {
-//       productId: uuidv4(),
-//       name,
-//       quantity,
-//       description,
-//       price,
-//       imageUrl,
-//       rating: 0,
-//     };
-
-//     const updatedUser = await user.findOneAndUpdate(
-//       { _id: userId },
-//       { $push: { productsListed: newProduct } },
-//       { new: true },
-//     );
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     res.status(200).json({
-//       product: newProduct,
-//       message: "Product listed successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error listing product:", error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
 
 
 //   const { name, quantity, description, price, imageUrl } = req.body;
@@ -879,5 +844,42 @@ Return ONLY a JSON like:
 //     res.status(500).json({ error: "Search failed" });
 //   }
 // });
+
+//Edit user product listed array
+router.put("/editProduct/:productId", authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { name, quantity, description, price, imageUrl } = req.body;
+    const userId = req.user.id;
+    const User = await user.findById({ _id: userId });
+    if (!User) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const productIndex = User.productsListed.findIndex(
+      (prod) => prod.productId === productId,
+    );
+    if (productIndex === -1) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    User.productsListed[productIndex] = {
+      ...User.productsListed[productIndex],
+      name,
+      quantity,
+      description,
+      price,
+      imageUrl,
+    };
+
+    await User.save();
+
+    res.status(200).json({
+      product: User.productsListed[productIndex],
+    });
+  } catch (error) {
+    console.error("Error editing product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 module.exports = router;
