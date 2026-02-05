@@ -50,6 +50,7 @@ router.post("/login", async (req, res) => {
         id: User._id.toString(),
         userEmail: User.userEmail,
         userName: User.userName,
+        reviews: User.reviews,
         productSold: User.productSold,
         productsListed: User.productsListed,
         rating: User.rating,

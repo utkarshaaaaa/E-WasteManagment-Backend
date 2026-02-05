@@ -387,16 +387,19 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
         sellerId: userId,
         participants: [],
         lastMessageAt: new Date(),
-        isClosed: false
+        isClosed: false,
       });
 
       await user.findByIdAndUpdate(
         userId,
         { $addToSet: { chatGroups: chatGroup._id } },
-        { new: true }
+        { new: true },
       );
 
-      console.log("Chat group created automatically for product:", newProduct.productId);
+      console.log(
+        "Chat group created automatically for product:",
+        newProduct.productId,
+      );
     } catch (chatError) {
       console.error("Error creating chat group:", chatError);
     }
@@ -410,8 +413,6 @@ router.post("/listProduct", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
 
 //   const { name, quantity, description, price, imageUrl } = req.body;
 //   const userId = req.user.id;
@@ -883,4 +884,153 @@ router.put("/editProduct/:productId", authMiddleware, async (req, res) => {
   }
 });
 
+//Get user review and rating
+router.get("/userReviewRating", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const User = await user.findOne({ _id: userId });
+    if (!User) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      reviews: User.reviews || [],
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//Product sold details and 
+router.get("/productsSold", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const User = await user.findOne({ _id: userId });
+    if (!User) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      productsSold: User.productSold || [],
+    });
+  }
+  catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }});
+
+  //Update profile name and password
+  router.put('/update-profile', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id ; 
+    const { userName, currentPassword, newPassword } = req.body;
+
+    if (!userName && !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide at least username or password to update',
+      });
+    }
+
+    const User = await user.findById(userId);
+    if (!User) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is required to change password',
+        });
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        User.password
+      );
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Current password is incorrect',
+        });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters long',
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      User.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    if (userName) {
+      if (userName.length < 3) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username must be at least 3 characters long',
+        });
+      }
+
+      const existingUser = await user.findOne({
+        userName: userName,
+        _id: { $ne: userId },
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username already taken',
+        });
+      }
+
+      User.userName = userName;
+    }
+    await User.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: User._id,
+        userName: User.userName,
+        userEmail: User.userEmail,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Please try again later.',
+      error: error.message,
+    });
+  }
+});
+
+//Get profile
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id 
+    const User = await user.findById(userId).select('-password');
+
+    if (!User) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    res.status(200).json({
+      user: User,
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({
+      success: false,
+    });
+  }
+});
 module.exports = router;

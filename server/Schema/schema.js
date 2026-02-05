@@ -9,12 +9,7 @@ const userschema = new mongoose.Schema(
     },
     profileImageUrl: {
       type: String,
-      // required: true,
     },
-    // Id: {
-    //   type: String,
-    //   // required: true,
-    // },
     userEmail: {
       type: String,
       required: true,
