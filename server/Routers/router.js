@@ -27,7 +27,7 @@ const { GoogleGenAI } = require("@google/genai");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const router = express.Router();
 const authMiddleware = require("../Middlewares/middleware");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { V2 } = require("paseto");
 const ChatGroup = require("../Schema/ChatGroup");
 const fetch = (...args) =>

@@ -6,9 +6,6 @@ const Message = require("../Schema/MessageSchema");
 const user = require("../Schema/schema");
 
 
-
-// Chats Routes
-
 // Get or create chat group for a product (Buyer)
 router.get("/product/:productId", authMiddleware, async (req, res) => {
   try {
@@ -18,7 +15,6 @@ router.get("/product/:productId", authMiddleware, async (req, res) => {
     const buyer = await user.findOne({ _id: buyerAuthId });
     if (!buyer) return res.status(404).json({ error: "Buyer not found" });
 
-    // Find existing chat group for this product
     let chatGroup = await ChatGroup.findOne({ productId });
 
     if (!chatGroup) {

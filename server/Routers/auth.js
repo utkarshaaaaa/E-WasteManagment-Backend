@@ -3,7 +3,7 @@ const router = express.Router();
 const { V2 } = require("paseto");
 const user = require("../Schema/schema");
 const dotenv = require("dotenv");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const authMiddleware = require("../Middlewares/middleware");
 
 dotenv.config();
