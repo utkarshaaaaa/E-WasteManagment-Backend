@@ -8,7 +8,7 @@ const router = require("./Routers/router");
 const auth = require("./Routers/auth");
 const chatRoutes = require("./Routers/chatRoutes");
 const setupSocket = require("./config/socket");
-
+const mongoURI = process.env.MONGODB_CONNECT_URI;
 const app = express();
 const server = http.createServer(app); 
 app.use(
@@ -22,8 +22,13 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+if (!mongoURI) {
+  console.error("MONGODB_CONNECT_URI is not defined");
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGODB_CONNECT_URI)
+  .connect(mongoURI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
